@@ -20,7 +20,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/api/instructor/register/', {
+      const response = await fetch('http://localhost:8000/api/student/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -29,7 +29,7 @@ const Register = () => {
       const result = await response.json();
       if (response.ok) {
         setMessage(result.message);
-        navigate('/validate-email', { state: { email: formData.email } }); // Pass email to the next page
+        navigate('/validate-emailSt', { state: { email: formData.email } }); // Pass email to the next page
       } else {
         setMessage(result.error);
       }
@@ -40,7 +40,7 @@ const Register = () => {
 
   return (
     <div className="max-w-md mx-auto p-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Register as Instructor</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-center">Register as Student</h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <input

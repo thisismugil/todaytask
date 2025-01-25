@@ -16,6 +16,7 @@ from pymongo import MongoClient
 from django.conf import settings
 import re
 from bson import ObjectId
+from django.contrib.auth.hashers import make_password, check_password
 
 
 
@@ -55,7 +56,8 @@ def register_instructor(request):
             first_name = data.get('first_name')
             last_name = data.get('last_name')
             email = data.get('email')
-            password = data.get('password')
+            hashed_password = make_password(data.get('password'))
+            password = hashed_password
             confirm_password = data.get('confirm_password')     
             if not all([first_name, last_name, email, password, confirm_password]):
                 return JsonResponse({'error': 'Please fill all fields'}, status=400)

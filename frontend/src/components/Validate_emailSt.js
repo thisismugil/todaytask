@@ -11,7 +11,7 @@ const ValidateEmail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/api/instructor/verify-email-otp/', {
+      const response = await fetch('http://localhost:8000/api/student/verify-email-otp/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
@@ -20,7 +20,7 @@ const ValidateEmail = () => {
       const result = await response.json();
       if (response.ok) {
         setMessage(result.message);
-        navigate('/login'); // Navigate to login page
+        navigate('/loginSt'); // Navigate to login page
       } else {
         setMessage(result.error);
       }
