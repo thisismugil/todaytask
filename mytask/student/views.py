@@ -9,7 +9,9 @@ import random
 import string
 import json
 from django.http import JsonResponse
-
+import jwt
+import datetime
+from django.conf import settings
 # MongoDB Setup
 client = MongoClient("mongodb+srv://prakashbalan555:aicourse@ai-course.si9g6.mongodb.net/")
 db = client["core"]
@@ -151,10 +153,12 @@ def verify_email_otp(request):
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
 # Login View
+
+from django.conf import settings
+
 @csrf_exempt
 def login_user(request):
     if request.method == 'POST':
-        print("Login")
         try:
             data = json.loads(request.body.decode('utf-8'))
             email = data.get('email')
@@ -170,18 +174,27 @@ def login_user(request):
             if user:
                 if not user.get('email_verified', False):
                     return JsonResponse({"error": "Email is not verified."}, status=403)
-                
+
+                # Generate JWT token
+                payload = {
+                    'email': email,
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)  # Token expires in 24 hours
+                }
+                token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm='HS256')
 
                 return JsonResponse({
                     "message": "Login successful.",
                     "email": email,
                     "first_name": user.get("first_name"),
                     "last_name": user.get("last_name"),
+                    "token": token
                 })
             else:
                 return JsonResponse({"error": "Invalid email or password."}, status=401)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": "Internal server error."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
     
@@ -289,5 +302,17 @@ def reset_password(request):
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
         except Exception as e:
             return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid request method."}, status=405)
+
+@csrf_exempt
+def logout_user(request):
+    if request.method == 'POST':
+        try:
+            # Invalidate the token or clear the session
+            # This can be done by removing the token from the client side or maintaining a blacklist of tokens on the server side
+            return JsonResponse({"message": "Logout successful."})
+        except Exception as e:
+            return JsonResponse({"error": "Internal server error."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
