@@ -142,3 +142,5 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'mugil1206@gmail.com'  # Replace with your email
 EMAIL_HOST_PASSWORD = 'hkfcxcjwbtdzbizf'  # Use app password if 2FA is enabled
 DEFAULT_FROM_EMAIL = 'your_email@gmail.com' 
+
+JWT_SECRET_KEY ="PK"
