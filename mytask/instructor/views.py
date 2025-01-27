@@ -56,8 +56,7 @@ def register_instructor(request):
             first_name = data.get('first_name')
             last_name = data.get('last_name')
             email = data.get('email')
-            hashed_password = make_password(data.get('password'))
-            password = hashed_password
+            password = data.get('password')
             confirm_password = data.get('confirm_password')     
             if not all([first_name, last_name, email, password, confirm_password]):
                 return JsonResponse({'error': 'Please fill all fields'}, status=400)
@@ -69,6 +68,7 @@ def register_instructor(request):
                 return JsonResponse({'error': 'Passwords do not match'}, status=400)            
             if instructor_collection.find_one({'email': email}):
                 return JsonResponse({'error': 'Email already exists'}, status=400)
+            hashed_password = make_password(data.get('confirm_password'))
             email_otp = generate_otp()
             email_message = f"<p>Your OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "email verification otp", email_message)
@@ -78,7 +78,7 @@ def register_instructor(request):
                 "first_name": first_name,
                 "last_name": last_name,
                 "email": email,
-                "password": password,
+                "password": hashed_password,
                 "email_verified": False,
                 "email_otp": email_otp,
             })
@@ -235,4 +235,6 @@ def reset_password(request):
             return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
+    
+
         
