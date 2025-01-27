@@ -31,7 +31,7 @@ import jwt
 import datetime
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
-# MongoDB Setup
+
 client = MongoClient("mongodb+srv://prakashbalan555:aicourse@ai-course.si9g6.mongodb.net/")
 db = client["core"]
 
@@ -73,11 +73,8 @@ def send_email(to_email, subject, message):
         return False
 
 import logging
-
-# Set up logging
 logger = logging.getLogger(__name__)
 
-# Registration View
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -85,60 +82,38 @@ def register_user(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
-            
-            # Extract fields
-            first_name = data.get('first_name')
-            
+            first_name = data.get('first_name')      
             hashed_password = make_password(data.get('password'))
-          # Optional
             last_name = data.get('last_name')
             email = data.get('email')
             password = hashed_password
             confirm_password = data.get('confirm_password')
-            
-
-            # Validate required fields
             if not all([first_name, last_name, email, password, confirm_password]):
                 return JsonResponse({"error": "All fields are required."}, status=400)
-
-            # Validate email and phone
             if not is_valid_email(email):
                 return JsonResponse({"error": "Invalid email format."}, status=400)
-
-            # Validate password
             if len(password) < 8:
                 return JsonResponse({"error": "Password must be at least 8 characters long."}, status=400)
             if password != confirm_password:
                 return JsonResponse({"error": "Passwords do not match."}, status=400)
-
-            # Check if email or phone already exists
             if users_collection.find_one({"email": email}):
                 return JsonResponse({"error": "Email is already registered."}, status=409)
-
-            # Generate OTPs
             email_otp = generate_otp()
-
-            # Send Email OTP
             email_message = f"<p>Your email verification OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "Email Verification OTP", email_message)
             if not email_sent:
                 return JsonResponse({"error": "Failed to send email OTP. Try again later."}, status=500)
-
-
-            # Save user to database with unverified status
             users_collection.insert_one({
                 "first_name": first_name,
                 "last_name": last_name,
                 "email": email,
-                "password": password,  # In production, hash this!
+                "password": password,  
                 "email_verified": False,
                 "email_otp": email_otp,
             })
-
             return JsonResponse({
                 "message": "User registered successfully! Verify your email and phone.",
             }, status=201)
-
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
         except Exception as e:
@@ -161,8 +136,6 @@ def verify_email_otp(request):
 
             if not user:
                 return JsonResponse({"error": "User not found."}, status=404)
-
-            # Verify OTP
             if str(user.get('email_otp')) == otp:
                 users_collection.update_one({"email": email}, {"$set": {"email_verified": True}})
                 return JsonResponse({"message": "Email verified successfully."})
@@ -176,7 +149,6 @@ def verify_email_otp(request):
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
-# Login View
 
 from django.conf import settings
 

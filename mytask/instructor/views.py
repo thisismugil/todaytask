@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from pymongo import MongoClient
 from django.conf import settings
-import re
+import re 
 from bson import ObjectId
 from django.contrib.auth.hashers import make_password, check_password
 
@@ -66,8 +66,7 @@ def register_instructor(request):
             if len(password) < 8:
                 return JsonResponse({'error': 'Password must be at least 8 characters'}, status=400)
             if password != confirm_password:
-                return JsonResponse({'error': 'Passwords do not match'}, status=400)
-            
+                return JsonResponse({'error': 'Passwords do not match'}, status=400)            
             if instructor_collection.find_one({'email': email}):
                 return JsonResponse({'error': 'Email already exists'}, status=400)
             email_otp = generate_otp()
@@ -236,3 +235,4 @@ def reset_password(request):
             return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
+        
