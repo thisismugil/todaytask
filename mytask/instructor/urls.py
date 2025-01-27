@@ -7,4 +7,5 @@ urlpatterns = [
     path('forgot-pass/',views.forgot_password_request, name='forgot-pass'),
     path('reset-pass/',views.reset_password, name='reset-pass'),
     path('verify-reset/',views.verify_reset_otp, name='verify-reset'),
+    path('upload/',views.upload_content, name='upload'),
 ]
