@@ -1,6 +1,24 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from pymongo import MongoClient
+import random
+import json
+import re
+from django.core.mail import send_mail
+import logging
+import string
+from django.conf import settings
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from pymongo import MongoClient
+from django.conf import settings
+import re
+from bson import ObjectId
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from pymongo import MongoClient
 import json
 import random
 import re
@@ -9,14 +27,15 @@ import random
 import string
 import json
 from django.http import JsonResponse
-import jwt
+import jwt 
 import datetime
+from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
-# MongoDB Setup
+
 client = MongoClient("mongodb+srv://prakashbalan555:aicourse@ai-course.si9g6.mongodb.net/")
 db = client["core"]
 
-# Ensure the database and collection are created
+
 if "core" not in client.list_database_names():
     db = client["core"]
 
@@ -27,7 +46,6 @@ else:
 
 print("Successfully connected to MongoDB and accessed the 'users' collection.")
 
-# Helper Functions
 def generate_otp():
     """Generate a 6-digit OTP."""
     return random.randint(100000, 999999)
@@ -43,9 +61,9 @@ def send_email(to_email, subject, message):
     try:
         send_mail(
             subject=subject,
-            message="",  # Empty because we're using HTML content
+            message="", 
             html_message=message,
-            from_email='your_email@gmail.com',  # Ensure this matches DEFAULT_FROM_EMAIL
+            from_email='your_email@gmail.com',  
             recipient_list=[to_email],
         )
         print(f"Email sent successfully to {to_email}")
@@ -55,67 +73,47 @@ def send_email(to_email, subject, message):
         return False
 
 import logging
-
-# Set up logging
 logger = logging.getLogger(__name__)
 
-# Registration View
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def register_user(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
-            
-            # Extract fields
-            first_name = data.get('first_name')
-          # Optional
+            first_name = data.get('first_name')      
+            hashed_password = make_password(data.get('password'))
             last_name = data.get('last_name')
             email = data.get('email')
-            password = data.get('password')
+            password = hashed_password
             confirm_password = data.get('confirm_password')
-
-            # Validate required fields
             if not all([first_name, last_name, email, password, confirm_password]):
                 return JsonResponse({"error": "All fields are required."}, status=400)
-
-            # Validate email and phone
             if not is_valid_email(email):
                 return JsonResponse({"error": "Invalid email format."}, status=400)
-
-            # Validate password
             if len(password) < 8:
                 return JsonResponse({"error": "Password must be at least 8 characters long."}, status=400)
             if password != confirm_password:
                 return JsonResponse({"error": "Passwords do not match."}, status=400)
-
-            # Check if email or phone already exists
             if users_collection.find_one({"email": email}):
                 return JsonResponse({"error": "Email is already registered."}, status=409)
-
-            # Generate OTPs
             email_otp = generate_otp()
-
-            # Send Email OTP
             email_message = f"<p>Your email verification OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "Email Verification OTP", email_message)
             if not email_sent:
                 return JsonResponse({"error": "Failed to send email OTP. Try again later."}, status=500)
-
-
-            # Save user to database with unverified status
             users_collection.insert_one({
                 "first_name": first_name,
                 "last_name": last_name,
                 "email": email,
-                "password": password,  # In production, hash this!
+                "password": password,  
                 "email_verified": False,
                 "email_otp": email_otp,
             })
-
             return JsonResponse({
                 "message": "User registered successfully! Verify your email and phone.",
             }, status=201)
-
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
         except Exception as e:
@@ -125,6 +123,8 @@ def register_user(request):
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_email_otp(request):
     if request.method == 'POST':
         try:
@@ -136,9 +136,7 @@ def verify_email_otp(request):
 
             if not user:
                 return JsonResponse({"error": "User not found."}, status=404)
-
-            # Verify OTP
-            if user.get('email_otp') == otp:
+            if str(user.get('email_otp')) == otp:
                 users_collection.update_one({"email": email}, {"$set": {"email_verified": True}})
                 return JsonResponse({"message": "Email verified successfully."})
             else:
@@ -151,11 +149,12 @@ def verify_email_otp(request):
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
-# Login View
 
 from django.conf import settings
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def login_user(request):
     if request.method == 'POST':
         try:
@@ -199,6 +198,8 @@ def login_user(request):
     
 # Forgot Password: Request OTP
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def forgot_password_request(request):
     if request.method == 'POST':
         try:
@@ -238,6 +239,8 @@ def forgot_password_request(request):
 
 # Forgot Password: Verify OTP
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_reset_otp(request):
     if request.method == 'POST':
         try:
@@ -267,8 +270,10 @@ def verify_reset_otp(request):
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
-# Forgot Password: Change Password
+
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def reset_password(request):
     if request.method == 'POST':
         try:
@@ -277,22 +282,17 @@ def reset_password(request):
             new_password = data.get('new_password')
             confirm_password = data.get('confirm_password')
 
-            # Validate input
             if not email or not new_password or not confirm_password:
                 return JsonResponse({"error": "All fields are required."}, status=400)
-
             if new_password != confirm_password:
                 return JsonResponse({"error": "Passwords do not match."}, status=400)
-
             if len(new_password) < 8:
                 return JsonResponse({"error": "Password must be at least 8 characters long."}, status=400)
 
-            # Find user
             user = users_collection.find_one({"email": email})
             if not user:
                 return JsonResponse({"error": "Email not registered."}, status=404)
 
-            # Update password
             users_collection.update_one({"email": email}, {"$set": {"password": new_password, "reset_otp": None}})
 
             return JsonResponse({"message": "Password reset successfully."}, status=200)
@@ -305,14 +305,13 @@ def reset_password(request):
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def logout_user(request):
     if request.method == 'POST':
         try:
-            # Invalidate the token or clear the session
-            # This can be done by removing the token from the client side or maintaining a blacklist of tokens on the server side
             return JsonResponse({"message": "Logout successful."})
         except Exception as e:
             return JsonResponse({"error": "Internal server error."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
-    

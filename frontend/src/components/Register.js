@@ -39,52 +39,72 @@ const Register = () => {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
+    <div className="max-w-md mx-auto p-4 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-semibold mb-4 text-center">Register as Instructor</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="first_name"
-          placeholder="First Name"
-          value={formData.first_name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="last_name"
-          placeholder="Last Name"
-          value={formData.last_name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="confirm_password"
-          placeholder="Confirm Password"
-          value={formData.confirm_password}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Register</button>
+        <div className="mb-4">
+          <input
+            type="text"
+            name="first_name"
+            placeholder="First Name"
+            value={formData.first_name}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-4">
+          <input
+            type="text"
+            name="last_name"
+            placeholder="Last Name"
+            value={formData.last_name}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-4">
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-4">
+          <input
+            type="password"
+            name="confirm_password"
+            placeholder="Confirm Password"
+            value={formData.confirm_password}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Register
+        </button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p className="mt-4 text-center text-red-500">{message}</p>}
     </div>
   );
 };

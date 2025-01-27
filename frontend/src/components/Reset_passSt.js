@@ -14,7 +14,7 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8000/api/instructor/reset-pass/', {
+      const response = await axios.post('http://localhost:8000/api/student/reset-pass/', {
         email,
         new_password: newPassword,
         confirm_password: confirmPassword,
