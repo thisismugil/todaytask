@@ -316,4 +316,3 @@ def logout_user(request):
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
     
-def 
