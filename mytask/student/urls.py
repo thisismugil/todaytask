@@ -5,7 +5,8 @@ from .views import (
     login_user,
     forgot_password_request,
     verify_reset_otp,
-    reset_password
+    reset_password,
+    logout_user
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('forgot-password/', forgot_password_request, name='forgot_password_request'),
     path('verify-reset-otp/', verify_reset_otp, name='verify_reset_otp'),
     path('reset-password/', reset_password, name='reset_password'),
+    path('logout/', logout_user, name='logout_user'),
 ]

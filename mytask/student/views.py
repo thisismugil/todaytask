@@ -68,7 +68,7 @@ def register_user(request):
             
             # Extract fields
             first_name = data.get('first_name')
-            middle_name = data.get('middle_name', "")  # Optional
+          # Optional
             last_name = data.get('last_name')
             email = data.get('email')
             password = data.get('password')
@@ -105,7 +105,6 @@ def register_user(request):
             # Save user to database with unverified status
             users_collection.insert_one({
                 "first_name": first_name,
-                "middle_name": middle_name,
                 "last_name": last_name,
                 "email": email,
                 "password": password,  # In production, hash this!
@@ -316,3 +315,5 @@ def logout_user(request):
             return JsonResponse({"error": "Internal server error."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
+    
+def 
