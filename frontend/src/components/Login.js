@@ -22,10 +22,12 @@ const Login = () => {
 
       const result = await response.json();
       if (response.ok) {
+        window.localStorage.setItem("_id",result._id)
         setMessage(result.message);
       } else {
         setMessage(result.error);
       }
+      navigate ('/hostdash')
     } catch (error) {
       setMessage('Something went wrong. Please try again.');
     }

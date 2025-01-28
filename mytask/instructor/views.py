@@ -125,18 +125,24 @@ def login_instructor(request):
             data = json.loads(request.body.decode('utf-8'))
             email = data.get('email')
             password = data.get('password')
+            print(password)
             if not email or not password:
                 return JsonResponse({"error": "Email and password are required."}, status=400)
-            instructor = instructor_collection.find_one({"email": email, "password": password})
+            instructor = instructor_collection.find_one({"email": email})
             if instructor:
-                if not instructor.get('email_verified', False):
-                    return JsonResponse({"error": "Email is not verified."}, status=403)
-                return JsonResponse({
-                    "message": "Login successful.",
-                    "email": email,
-                    "first_name": instructor.get("first_name"),
-                    "last_name": instructor.get("last_name"),
-                })
+                if check_password(password=password, encoded=instructor['password']):
+                    if not instructor.get('email_verified', False):
+                        return JsonResponse({"error": "Email is not verified."}, status=403)
+                    return JsonResponse({
+                        "message": "Login successful.",
+                        "email": email,
+                        "first_name": instructor.get("first_name"),
+                        "last_name": instructor.get("last_name"),
+                        "_id": str(instructor.get("_id")),
+                        
+                    })
+                else:
+                    return JsonResponse({"error": "Invalid password."}, status=401)
             else:
                 return JsonResponse({"error": "Invalid email or password."}, status=401)
         except json.JSONDecodeError:
@@ -245,18 +251,51 @@ def upload_content(request):
         course_name = data.get('course_name')
         category = data.get('category')
         description = data.get('description')
+        number_of_modules = data.get('number_of_modules')
         content = data.get('content')
         price = data.get('price')
+        user_id = data.get("user_id")
+        if not user_id:
+            return JsonResponse({"error": "User ID is required."}, status=400)
         if not course_name or not description or not content or not price:
             return JsonResponse({"error": "All fields are required."}, status=400)
         course_collection.insert_one({
             "course_name": course_name,
             "category": category,
             "description": description,
+            "Number of modules": number_of_modules,
             "content": content,
             "price": price,
+            "user_id": user_id
+            
         })
         return JsonResponse({"message": "Course uploaded successfully."}, status=200)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON format."}, status=400)
-        
+    
+@api_view(['GET'])
+def uploaded_courses(request, user_id):
+    try:
+        contents = list(course_collection.find({"user_id":user_id}))
+        print(contents)
+        for content in contents:
+            content['_id'] = str(content['_id'])
+        return Response({
+            'contents': contents
+        })
+    except Exception as e:
+        print(f'Error {e}')
+        return JsonResponse({"error": "Internal server error. Please try again later."}, status=500 )
+    
+@api_view(['GET'])
+def all_course(request):
+    try:
+        contents = list(course_collection.find())
+        for content in contents:
+            content['_id'] = str(content['_id'])
+        return Response({
+                'contents': contents
+            })
+    except Exception as e:
+        return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
+
