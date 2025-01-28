@@ -23,6 +23,7 @@ const Login = () => {
       const result = await response.json();
       if (response.ok) {
         setMessage(result.message);
+        window.localStorage.setItem("token", result.token);
       } else {
         setMessage(result.error);
       }
@@ -67,8 +68,8 @@ const Login = () => {
           </button>
         </form>
         <div className="text-center mt-4">
-          <a
-            onClick={() => navigate('/Forgot-passSt')}
+        <a
+            href='#' onClick={() => navigate('/Forgot-passSt')}
             className="text-sm text-blue-500 hover:underline cursor-pointer"
           >
             Forgot Password?

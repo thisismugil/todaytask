@@ -13,7 +13,7 @@ import Reset_passSt from './components/Reset_passSt';
 import Validate_emailSt from './components/Validate_emailSt';
 import Verify_reset_otpSt from './components/Verify_reset_otpSt';
 import StudentDash from './components/StudentDash'
-
+import CourseDisplay from './components/CourseDisplay';
 
 
 
@@ -35,6 +35,7 @@ const App = () => {
           <Route path="/Verify-reset-otpSt" element={<Verify_reset_otpSt />} />
           <Route path="/Reset-passSt" element={<Reset_passSt />} />
           <Route path="StudentDash" element={<StudentDash />} />
+          <Route path="/CourseDisplay" element={<CourseDisplay  />} />
         </Routes>
       </div>
     </Router>
