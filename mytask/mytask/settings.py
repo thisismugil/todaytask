@@ -22,6 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-2nmmgav+r2f&m0uu+jqx=cl8k*gtuc8ezc*wu53ojw2o#f55)@"
 
+JWT_SECRET_KEY="PK"
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -53,6 +55,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware'
 ]
 
 ROOT_URLCONF = "mytask.urls"
@@ -143,4 +148,8 @@ EMAIL_HOST_USER = 'mugil1206@gmail.com'  # Replace with your email
 EMAIL_HOST_PASSWORD = 'hkfcxcjwbtdzbizf'  # Use app password if 2FA is enabled
 DEFAULT_FROM_EMAIL = 'your_email@gmail.com' 
 
-JWT_SECRET_KEY ="PK"
+# filepath: /D:/iHub/NewTask/todaytask/mytask/settings.py
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
+LOGIN_URL = '/login/'

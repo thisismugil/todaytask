@@ -299,3 +299,5 @@ def all_course(request):
     except Exception as e:
         return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
 
+        
+    
