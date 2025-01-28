@@ -23,6 +23,7 @@ from django.contrib.auth.hashers import make_password, check_password
 client = MongoClient('mongodb://localhost:27017/')
 db = client['mytask']
 instructor_collection = db["instructor"]
+course_collection = db["contents"]
 
 def generate_otp():
     return random.randint(100000, 999999)
@@ -68,7 +69,7 @@ def register_instructor(request):
                 return JsonResponse({'error': 'Passwords do not match'}, status=400)            
             if instructor_collection.find_one({'email': email}):
                 return JsonResponse({'error': 'Email already exists'}, status=400)
-            hashed_password = make_password(data.get('confirm_password'))
+            hashed_password = make_password(data.get('password'))
             email_otp = generate_otp()
             email_message = f"<p>Your OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "email verification otp", email_message)
@@ -235,6 +236,30 @@ def reset_password(request):
             return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
-    
-
         
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def upload_content(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        course_name = data.get('course_name')
+        category = data.get('category')
+        description = data.get('description')
+        number_of_modules = data.get('number_of_modules')
+        content = data.get('content')
+        price = data.get('price')
+        if not course_name or not description or not content or not price:
+            return JsonResponse({"error": "All fields are required."}, status=400)
+        course_collection.insert_one({
+            "course_name": course_name,
+            "category": category,
+            "description": description,
+            "Number of modules": number_of_modules,
+            "content": content,
+            "price": price,
+        })
+        return JsonResponse({"message": "Course uploaded successfully."}, status=200)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format."}, status=400)
+        
+    

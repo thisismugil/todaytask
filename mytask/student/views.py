@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 from django.conf import settings
 import re
 from bson import ObjectId
@@ -43,6 +43,10 @@ if "users" not in db.list_collection_names():
     users_collection = db.create_collection("users")
 else:
     users_collection = db["users"]
+if "courses" not in db.list_collection_names():
+    course_collection = db.create_collection("courses")
+else:
+    course_collection = db["courses"]
 
 print("Successfully connected to MongoDB and accessed the 'users' collection.")
 
@@ -63,7 +67,7 @@ def send_email(to_email, subject, message):
             subject=subject,
             message="", 
             html_message=message,
-            from_email='your_email@gmail.com',  
+              
             recipient_list=[to_email],
         )
         print(f"Email sent successfully to {to_email}")
@@ -71,7 +75,19 @@ def send_email(to_email, subject, message):
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
+def send_enrollment_email(to_email):
+    subject = "Thank You For Enrolling In Our Course"
+    message = "Thank you for enrolling in our course. We hope you enjoy the learning experience."
+    from_email = 'your_email@gmail.com'
+    recipient_list = [to_email]
 
+    try:
+        send_mail(subject, message, from_email, recipient_list)
+        print(f"Email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
 import logging
 logger = logging.getLogger(__name__)
 
@@ -315,3 +331,89 @@ def logout_user(request):
             return JsonResponse({"error": "Internal server error."}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
+  
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def fetch_courses(request):
+    if request.method == 'GET':
+        try:
+            courses = course_collection.find()
+            courses_list = []
+            for course in courses:
+                course['_id'] = str(course['_id'])  # Convert ObjectId to string
+                courses_list.append(course)
+            logger.debug(f"Total courses fetched: {len(courses_list)}")
+            return JsonResponse({"courses": courses_list})
+        except errors.ServerSelectionTimeoutError:
+            return JsonResponse({"error": "Could not connect to MongoDB server."}, status=500)
+        except Exception as e:
+            return JsonResponse({"error": "Internal server error."}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid request method."}, status=405)
+@csrf_exempt
+@api_view(['GET'])
+def fetch_course(request, course_id):
+    try:
+        course_id = ObjectId(course_id)
+        print(course_id)
+        course = course_collection.find_one({"_id": course_id})
+        print(course)
+        if not course:
+            return JsonResponse({"error": "Course not found"}, status=404)
+        course['_id'] = str(course['_id'])  # Convert ObjectId to string
+        return JsonResponse(course, safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@permission_classes([IsAuthenticated])
+@require_POST
+def enroll_course(request):
+    try:
+        auth_header = request.headers.get('Authorization')
+        data = json.loads(request.body.decode('utf-8'))
+        course_id = data.get('courseId')
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            decoded_data = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
+            user_email = decoded_data.get('email')
+        else:
+            return JsonResponse({"error": "Invalid token."}, status=401)
+
+        if not course_id:
+            return JsonResponse({"error": "Course ID is required."}, status=400)
+
+        try:
+            course_id = ObjectId(course_id)
+        except Exception as e:
+            return JsonResponse({"error": "Invalid course ID format."}, status=400)
+
+        course = course_collection.find_one({"_id": course_id})
+        if not course:
+            return JsonResponse({"error": "Course not found."}, status=404)
+
+        # Check if the user is already enrolled
+        if 'enrolled_users' in course and user_email in course['enrolled_users']:
+            return JsonResponse({"message": "User already enrolled in the course."}, status=200)
+
+        # Enroll the user in the course
+        course_collection.update_one(
+            {"_id": course_id},
+            {"$addToSet": {"enrolled_users": user_email}}
+        )
+
+        # Send thank you email
+        send_enrollment_email(user_email)
+
+        return JsonResponse({"message": "Successfully enrolled in the course."}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+        
+
