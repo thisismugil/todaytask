@@ -356,12 +356,10 @@ def fetch_courses(request):
 def fetch_course(request, course_id):
     try:
         course_id = ObjectId(course_id)
-        print(course_id)
         course = course_collection.find_one({"_id": course_id})
-        print(course)
         if not course:
             return JsonResponse({"error": "Course not found"}, status=404)
-        course['_id'] = str(course['_id'])  # Convert ObjectId to string
+        course['_id'] = str(course['_id'])
         return JsonResponse(course, safe=False)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
