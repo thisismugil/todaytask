@@ -8,4 +8,6 @@ urlpatterns = [
     path('reset-pass/',views.reset_password, name='reset-pass'),
     path('verify-reset/',views.verify_reset_otp, name='verify-reset'),
     path('upload/',views.upload_content, name='upload'),
+    path('fetch/<str:user_id>',views.uploaded_courses, name='fetch'),
+    path('courses/',views.all_course, name='courses'),
 ]

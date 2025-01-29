@@ -9,7 +9,7 @@ from .views import (
     logout_user,
     fetch_courses,
     enroll_course,
-    fetch_course
+    fetch_course,
 )
 
 urlpatterns = [
