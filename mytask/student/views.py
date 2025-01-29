@@ -75,19 +75,24 @@ def send_email(to_email, subject, message):
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
-def send_enrollment_email(to_email):
-    subject = "Thank You For Enrolling In Our Course"
-    message = "Thank you for enrolling in our course. We hope you enjoy the learning experience."
-    from_email = 'your_email@gmail.com'
-    recipient_list = [to_email]
-
+def send_enrollment_email(user_email):
     try:
-        send_mail(subject, message, from_email, recipient_list)
-        print(f"Email sent successfully to {to_email}")
+        # Add your email sending logic here
+        logger.info(f"Sending enrollment email to {user_email}")
+    
+        email_sent = send_email(user_email, "Enrollment Confirmation", "You have been enrolled in the course.")
+        if not email_sent:
+            logger.error(f"Failed to send enrollment email to {user_email}")
+            return False
+        logger.info(f"Enrollment email sent to {user_email}")
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        logger.error(f"Error sending enrollment email to {user_email}: {str(e)}")
         return False
+
+# Update the enrollment logic to check the result of send_enrollment_email
+    # if not send_enrollment_email(user_email):
+    #     return JsonResponse({"error": "Failed to send enrollment email. Try again later."}, status=500)
 import logging
 logger = logging.getLogger(__name__)
 
@@ -99,11 +104,12 @@ def register_user(request):
         try:
             data = json.loads(request.body.decode('utf-8'))
             first_name = data.get('first_name')      
-            hashed_password = make_password(data.get('password'))
+            
             last_name = data.get('last_name')
             email = data.get('email')
             password = data.get('password')
             confirm_password = data.get('confirm_password')
+            hashed_password = make_password(password)
             if not all([first_name, last_name, email, password, confirm_password]):
                 return JsonResponse({"error": "All fields are required."}, status=400)
             if not is_valid_email(email):
@@ -114,7 +120,7 @@ def register_user(request):
                 return JsonResponse({"error": "Passwords do not match."}, status=400)
             if users_collection.find_one({"email": email}):
                 return JsonResponse({"error": "Email is already registered."}, status=409)
-            hashed_password = make_password(data.get('password'))
+            
             email_otp = generate_otp()
             email_message = f"<p>Your email verification OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "Email Verification OTP", email_message)
@@ -184,11 +190,15 @@ def login_user(request):
                 return JsonResponse({"error": "Email and password are required."}, status=400)
 
             # Find user in the database
-            user = users_collection.find_one({"email": email, "password": password})
+            user = users_collection.find_one({"email": email})
 
             if user:
                 if not user.get('email_verified', False):
                     return JsonResponse({"error": "Email is not verified."}, status=403)
+
+                # Check password
+                if not check_password(password, user.get('password')):
+                    return JsonResponse({"error": "Invalid email or password."}, status=401)
 
                 # Generate JWT token
                 payload = {
@@ -357,12 +367,10 @@ def fetch_courses(request):
 def fetch_course(request, course_id):
     try:
         course_id = ObjectId(course_id)
-        print(course_id)
         course = course_collection.find_one({"_id": course_id})
-        print(course)
         if not course:
             return JsonResponse({"error": "Course not found"}, status=404)
-        course['_id'] = str(course['_id'])  # Convert ObjectId to string
+        course['_id'] = str(course['_id']) 
         return JsonResponse(course, safe=False)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
@@ -379,11 +387,13 @@ def enroll_course(request):
         auth_header = request.headers.get('Authorization')
         data = json.loads(request.body.decode('utf-8'))
         course_id = data.get('courseId')
+        print(course_id)
 
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
             decoded_data = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=['HS256'])
             user_email = decoded_data.get('email')
+            print(user_email)
         else:
             return JsonResponse({"error": "Invalid token."}, status=401)
 
@@ -400,13 +410,14 @@ def enroll_course(request):
             return JsonResponse({"error": "Course not found."}, status=404)
 
         # Check if the user is already enrolled
-        if 'enrolled_users' in course and user_email in course['enrolled_users']:
+        if 'enrolled_users' in course and user_email in course['enrolled_students']:
             return JsonResponse({"message": "User already enrolled in the course."}, status=200)
-
+        print(user_email)
+        print(course_id)
         # Enroll the user in the course
         course_collection.update_one(
             {"_id": course_id},
-            {"$addToSet": {"enrolled_users": user_email}}
+            {"$addToSet": {"enrolled_students": user_email}}
         )
 
         # Send thank you email
@@ -416,5 +427,6 @@ def enroll_course(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-        
+
+
 

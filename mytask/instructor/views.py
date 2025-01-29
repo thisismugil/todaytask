@@ -229,8 +229,6 @@ def verify_reset_otp(request):
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
-
-
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
