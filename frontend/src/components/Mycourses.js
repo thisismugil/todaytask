@@ -49,7 +49,7 @@ const UploadedCourses = () => {
                             <p className="text-gray-600 mb-2">Category: <span className="font-medium">{course.category}</span></p>
                             <p className="text-gray-600 mb-2">Description: <span className="font-medium">{course.description}</span></p>
                             <p className="text-gray-600 mb-2">Price: <span className="font-medium">${course.price}</span></p>
-                            <p className="text-gray-600">Modules: <span className="font-medium">{course["Number of modules"]}</span></p>
+                            <p className="text-gray-600 mt-2">Modules: <span className="font-medium">{course["Number of modules"]}</span></p>
                         </div>
                     ))}
                 </div>

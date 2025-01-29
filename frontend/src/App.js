@@ -18,6 +18,7 @@ import Hostdashboard from './components/Hostdashboard'
 import UploadCourse from './components/UploadCourse';
 import Mycourses from './components/Mycourses';
 import CourseDisplay from './components/CourseDisplay';
+import Contents from './components/Contents';
 
 
 function filterPath(pathName) {
@@ -71,6 +72,7 @@ useEffect(() => {
             <Route path='/myCourses' element={<Mycourses />} />
             {/* <Route path='/allCourse' element={<Allcourse />} /> */}
             <Route path='/CourseDisplay' element={<CourseDisplay />} />
+            <Route path='/Contents/:id' element={<Contents />} />
           </Routes>
         </div>
       </div>
