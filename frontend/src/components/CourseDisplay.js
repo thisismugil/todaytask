@@ -6,12 +6,13 @@ const CourseDisplay = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const userEmail = 'user@example.com'; // Replace with actual user email logic
 
   useEffect(() => {
     const fetchCourseDetail = async () => {
       try {
         console.log('Fetching course details for ID:', courseId); // Log the ID
-        const response = await fetch(` http://127.0.0.1:8000/api/student/fetch-course/${courseId}`, {method: "GET"});
+        const response = await fetch(`http://127.0.0.1:8000/api/student/fetch-course/${courseId}`, { method: "GET" });
         const text = await response.text(); // Get raw response text
         console.log('Raw response:', text); // Log raw response
         const data = JSON.parse(text); // Parse JSON from raw text
@@ -67,5 +68,4 @@ const CourseDisplay = () => {
     </div>
   );
 };
-
 export default CourseDisplay;

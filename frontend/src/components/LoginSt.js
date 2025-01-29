@@ -24,10 +24,11 @@ const Login = () => {
       if (response.ok) {
         setMessage(result.message);
         window.localStorage.setItem("token", result.token);
+        navigate('/StudentDash')
       } else {
         setMessage(result.error);
       }
-      navigate('/StudentDash')
+      
     } catch (error) {
       setMessage('Something went wrong. Please try again.');
     }

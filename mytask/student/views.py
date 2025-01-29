@@ -118,9 +118,16 @@ def register_user(request):
                 return JsonResponse({"error": "Password must be at least 8 characters long."}, status=400)
             if password != confirm_password:
                 return JsonResponse({"error": "Passwords do not match."}, status=400)
+            if not re.search(r'[A-Z]', password):
+                return JsonResponse({"error": "Password must contain at least one uppercase letter."}, status=400)
+            if not re.search(r'[a-z]', password):
+                return JsonResponse({"error": "Password must contain at least one lowercase letter."}, status=400)
+            if not re.search(r'[0-9]', password):
+                return JsonResponse({"error": "Password must contain at least one digit."}, status=400)
+            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+                return JsonResponse({"error": "Password must contain at least one special character."}, status=400)
             if users_collection.find_one({"email": email}):
                 return JsonResponse({"error": "Email is already registered."}, status=409)
-            
             email_otp = generate_otp()
             email_message = f"<p>Your email verification OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "Email Verification OTP", email_message)
