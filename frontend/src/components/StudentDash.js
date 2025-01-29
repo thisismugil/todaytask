@@ -2,94 +2,122 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const LandingPage = () => {
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+const StudentDash = () => {
+const [courses, setCourses] = useState([]);
+const [filteredCourses, setFilteredCourses] = useState([]);
+const [loading, setLoading] = useState(true);
+const [category, setCategory] = useState('');
+const [price, setPrice] = useState('');
+const [search, setSearch] = useState('');
+const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch user data logic here
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [navigate]);
-
-  // Session management
-  useEffect(() => {
-    let timeoutId;
-
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        localStorage.removeItem('user'); // Clear user session
-        navigate('/loginSt'); // Redirect to login after inactivity
-      }, 6000); // 1 minute
-    };
-
-    // Event listeners for user activity
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keydown', resetTimer);
-    window.addEventListener('click', resetTimer);
-    window.addEventListener('scroll', resetTimer);
-
-    // Start the timer
-    resetTimer();
-
-    // Cleanup event listeners and timeout on component unmount
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('click', resetTimer);
-      window.removeEventListener('scroll', resetTimer);
-    };
-  }, [navigate]);
-
-  const handleLogout = async () => {
+useEffect(() => {
+  const fetchCourses = async () => {
     try {
-      await axios.post('http://localhost/api/student/logout_user');
-      localStorage.removeItem('user');
-      navigate('/loginSt');
+      const response = await axios.get('http://localhost:8000/api/student/fetch-courses/');
+      setCourses(response.data.courses);
+      setFilteredCourses(response.data.courses);
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Error fetching courses:', error);
+    } finally {
+      setLoading(false);
     }
   };
+  fetchCourses();
+}, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <p className="text-xl text-gray-700">Loading...</p>
-      </div>
-    );
+useEffect(() => {
+  filterCourses();
+}, [category, price, search]);
+
+const filterCourses = () => {
+  let filtered = courses;
+
+  if (category) {
+    filtered = filtered.filter(course => course.category.toLowerCase().includes(category.toLowerCase()));
   }
 
-  return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="flex justify-between items-center bg-blue-600 text-white px-6 py-4 shadow-md">
-        <h1 className="text-2xl font-bold">Welcome to Our Platform</h1>
-        <button
-          className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
-      </header>
-      <main className="flex-grow flex flex-col items-center justify-center px-6 py-8">
-        <p className="text-xl font-medium text-gray-700 mb-4">
-          Hello, welcome back to our amazing application!
-        </p>
-      </main>
-      <footer className="bg-gray-800 text-white text-center py-4">
-        <p className="text-sm">&copy; 2025 Our Platform. All rights reserved.</p>
-      </footer>
-    </div>
-  );
+  if (price) {
+    filtered = filtered.filter(course => course.price <= price);
+  }
+
+  if (search) {
+    filtered = filtered.filter(course => course.course_name.toLowerCase().includes(search.toLowerCase()));
+  }
+
+  setFilteredCourses(filtered);
 };
 
-export default LandingPage;
+const handleEnroll = async (courseId) => {
+  console.log(courseId)
+  try {
+    await axios.get('http://localhost:8000/api/student/enroll-course/', { courseId }, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + window.localStorage.getItem("tokens")
+      }
+    });
+    navigate('/CourseDisplay', { state: { courseId } });
+  } catch (error) {
+    console.error('Enrollment failed:', error);
+  }
+};
+
+if (loading) {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <p className="text-xl text-gray-700">Loading courses...</p>
+    </div>
+  );
+}
+
+return (
+  <div className="min-h-screen bg-gray-50 p-6">
+    <div className="mb-4">
+      <input
+        type="text"
+        placeholder="Search by course name"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="p-2 border border-gray-300 rounded"
+      />
+      <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="p-2 border border-gray-300 rounded ml-2"
+      >
+        <option value="">All Categories</option>
+        <option value="programming language">Programming Language</option>
+        <option value="non circuit">non circuit</option>
+        <option value="web development">Web Development</option>
+        {/* Add more categories as needed */}
+      </select>
+      <input
+        type="number"
+        placeholder="Max Price"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+        className="p-2 border border-gray-300 rounded ml-2"
+      />
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {filteredCourses.map(course => (
+        <div key={course._id} className="bg-white shadow-md rounded-lg p-4">
+          <h2 className="text-xl font-semibold text-gray-800">{course.course_name}</h2>
+          <p className="text-gray-700 mt-2">{course.description}</p>
+          <p className="text-gray-600 mt-2">Category: {course.category}</p>
+          <p className="text-gray-600 mt-2">Price: ${course.price}</p>
+          <button
+            onClick={() => handleEnroll(course._id)}
+            className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          >
+            Enroll
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+};
+
+export default StudentDash;

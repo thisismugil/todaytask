@@ -9,6 +9,7 @@ const UploadCourse = () => {
     const [category, setCategory] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
+    const [duration, setDuration] = useState("");
     const [numberOfModules, setNumberOfModules] = useState(0);
     const [modules, setModules] = useState([]);
     const [activeTab, setActiveTab] = useState("upload");
@@ -40,6 +41,7 @@ const UploadCourse = () => {
             number_of_modules: numberOfModules,
             content: modules,
             price,
+            duration,
             user_id: userId
         };
 

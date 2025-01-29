@@ -23,10 +23,11 @@ const Login = () => {
       const result = await response.json();
       if (response.ok) {
         setMessage(result.message);
+        navigate('/StudentDash');
       } else {
         setMessage(result.error);
       }
-      navigate('/StudentDash')
+      
     } catch (error) {
       setMessage('Something went wrong. Please try again.');
     }
@@ -72,6 +73,14 @@ const Login = () => {
             className="text-sm text-blue-500 hover:underline cursor-pointer"
           >
             Forgot Password?
+          </a>
+        </div>
+        <div className="text-center mt-4">
+          <a
+            onClick={() => navigate('/registerSt')}
+            className="text-sm text-blue-500 hover:underline cursor-pointer"
+          >
+            Create an account
           </a>
         </div>
         {message && (

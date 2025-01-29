@@ -24,10 +24,11 @@ const Login = () => {
       if (response.ok) {
         window.localStorage.setItem("_id",result._id)
         setMessage(result.message);
+        navigate ('/uploadCourse')
       } else {
         setMessage(result.error);
       }
-      navigate ('/hostdash')
+      
     } catch (error) {
       setMessage('Something went wrong. Please try again.');
     }
@@ -73,6 +74,14 @@ const Login = () => {
             className="text-sm text-blue-500 hover:underline cursor-pointer"
           >
             Forgot Password?
+          </a>
+        </div>
+        <div className="mt-4 text-center">
+          <a
+            onClick={() => navigate('/register')}
+            className="text-sm text-blue-500 hover:underline cursor-pointer"
+          >
+            Create an Account
           </a>
         </div>
         {message && (

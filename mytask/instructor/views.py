@@ -20,10 +20,24 @@ from django.contrib.auth.hashers import make_password, check_password
 
 
 
-client = MongoClient('mongodb://localhost:27017/')
-db = client['mytask']
-instructor_collection = db["instructor"]
-course_collection = db["contents"]
+
+client = MongoClient("mongodb+srv://prakashbalan555:aicourse@ai-course.si9g6.mongodb.net/")
+db = client["core"]
+
+
+if "core" not in client.list_database_names():
+    db = client["core"]
+
+if "instructor" not in db.list_collection_names():
+    instructor_collection = db.instructor_collection("instructor")
+else:
+    instructor_collection = db["instructor"]
+if "courses" not in db.list_collection_names():
+    course_collection = db.course_collection("courses")
+else:
+    course_collection = db["courses"]
+    
+
 
 def generate_otp():
     return random.randint(100000, 999999)
@@ -124,11 +138,13 @@ def login_instructor(request):
         try:
             data = json.loads(request.body.decode('utf-8'))
             email = data.get('email')
+            print(email)
             password = data.get('password')
             print(password)
             if not email or not password:
                 return JsonResponse({"error": "Email and password are required."}, status=400)
             instructor = instructor_collection.find_one({"email": email})
+            print(instructor)
             if instructor:
                 if check_password(password=password, encoded=instructor['password']):
                     if not instructor.get('email_verified', False):
@@ -259,6 +275,7 @@ def upload_content(request):
             return JsonResponse({"error": "User ID is required."}, status=400)
         if not course_name or not description or not content or not price:
             return JsonResponse({"error": "All fields are required."}, status=400)
+        
         course_collection.insert_one({
             "course_name": course_name,
             "category": category,
@@ -266,9 +283,22 @@ def upload_content(request):
             "Number of modules": number_of_modules,
             "content": content,
             "price": price,
-            "user_id": user_id
+            "user_id": user_id,
+            "enrolled_students": []
             
         })
+        
+        instructor = instructor_collection.find_one({"_id": user_id})
+        if instructor:
+            instructor_email = instructor['email']
+            print("email",instructor_email)
+            subject = 'Course Creation Successful'
+            message = f'Dear Instructor,\n\nYour course "{course_name}" has been successfully created.\n\nBest regards,\nThanks for choosing us.'
+            from_email = 'mugil1206@gmail.com'
+            recipient_list = [instructor_email]
+            send_mail(subject, message, from_email, recipient_list)
+            
+            
         return JsonResponse({"message": "Course uploaded successfully."}, status=200)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON format."}, status=400)

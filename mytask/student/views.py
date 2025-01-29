@@ -67,7 +67,7 @@ def send_email(to_email, subject, message):
             subject=subject,
             message="", 
             html_message=message,
-              
+            from_email='mugil1206@gmail.com',
             recipient_list=[to_email],
         )
         print(f"Email sent successfully to {to_email}")
@@ -102,7 +102,7 @@ def register_user(request):
             hashed_password = make_password(data.get('password'))
             last_name = data.get('last_name')
             email = data.get('email')
-            password = hashed_password
+            password = data.get('password')
             confirm_password = data.get('confirm_password')
             if not all([first_name, last_name, email, password, confirm_password]):
                 return JsonResponse({"error": "All fields are required."}, status=400)
@@ -114,6 +114,7 @@ def register_user(request):
                 return JsonResponse({"error": "Passwords do not match."}, status=400)
             if users_collection.find_one({"email": email}):
                 return JsonResponse({"error": "Email is already registered."}, status=409)
+            hashed_password = make_password(data.get('password'))
             email_otp = generate_otp()
             email_message = f"<p>Your email verification OTP is: <strong>{email_otp}</strong></p>"
             email_sent = send_email(email, "Email Verification OTP", email_message)
@@ -123,7 +124,7 @@ def register_user(request):
                 "first_name": first_name,
                 "last_name": last_name,
                 "email": email,
-                "password": password,  
+                "password": hashed_password,  
                 "email_verified": False,
                 "email_otp": email_otp,
             })
