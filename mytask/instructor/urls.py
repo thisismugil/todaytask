@@ -10,4 +10,5 @@ urlpatterns = [
     path('upload/',views.upload_content, name='upload'),
     path('fetch/<str:user_id>',views.uploaded_courses, name='fetch'),
     path('courses/',views.all_course, name='courses'),
+    path('edit-course/', views.edit_course, name='edit-course'),
 ]

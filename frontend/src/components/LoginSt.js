@@ -24,7 +24,7 @@ const Login = () => {
       if (response.ok) {
         setMessage(result.message);
         window.localStorage.setItem("token", result.token);
-        navigate('/StudentDash');
+        navigate('/StudentDash')
       } else {
         setMessage(result.error);
       }

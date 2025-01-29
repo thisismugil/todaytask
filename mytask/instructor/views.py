@@ -295,8 +295,6 @@ def upload_content(request):
             from_email = 'mugil1206@gmail.com'
             recipient_list = [instructor_email]
             send_mail(subject, message, from_email, recipient_list)
-            
-            
         return JsonResponse({"message": "Course uploaded successfully."}, status=200)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON format."}, status=400)
@@ -327,5 +325,21 @@ def all_course(request):
     except Exception as e:
         return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
 
+
+@api_view(['PUT'])
+def edit_course(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        course_id = data.get('_id')
+        edited_course = course_collection.find_one_and_replace({"_id":course_id}, data)
+        
+        print(edited_course)    
+        if not edited_course:
+            return JsonResponse({"error": "Some error occured while editing."}, status=404)
+        
+        return JsonResponse({"message": "Course edited successfully."}, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
         
     

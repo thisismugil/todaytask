@@ -12,6 +12,9 @@ const StudentDash = () => {
   const [price, setPrice] = useState('');
   const [search, setSearch] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showInactivityDialog, setShowInactivityDialog] = useState(false);
+  const [inactivityCountdown, setInactivityCountdown] = useState(10);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,6 +84,66 @@ const StudentDash = () => {
     }
   };
 
+  const handleLogout = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/loginSt');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutDialog(false);
+  };
+
+  const handleInactivityLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/loginSt');
+  };
+
+  useEffect(() => {
+    let timeoutId;
+    let countdownId;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      clearInterval(countdownId);
+      timeoutId = setTimeout(() => {
+        setShowInactivityDialog(true);
+        setInactivityCountdown(10);
+        countdownId = setInterval(() => {
+          setInactivityCountdown(prev => prev - 1);
+        }, 1000);
+      }, 30000); // 30 seconds
+    };
+
+    // Event listeners for user activity
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+    window.addEventListener('click', resetTimer);
+    window.addEventListener('scroll', resetTimer);
+
+    // Start the timer
+    resetTimer();
+
+    // Cleanup event listeners and timeout on component unmount
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(countdownId);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+      window.removeEventListener('click', resetTimer);
+      window.removeEventListener('scroll', resetTimer);
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (inactivityCountdown === 0) {
+      handleInactivityLogout();
+    }
+  }, [inactivityCountdown]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -125,8 +188,56 @@ const StudentDash = () => {
         <div className="text-right flex items-center">
           <i className="fas fa-user-circle text-gray-700 mr-2"></i> {/* Font Awesome user icon */}
           <p className="text-gray-700">{userEmail}</p>
+          <button
+            onClick={handleLogout}
+            className="ml-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+          >
+            Logout
+          </button>
         </div>
       </div>
+      {showLogoutDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <p className="text-lg mb-4">Are you sure you want to logout?</p>
+            <div className="flex justify-end">
+              <button
+                onClick={cancelLogout}
+                className="mr-2 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+              >
+                No
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showInactivityDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <p className="text-lg mb-4">You have been inactive for 30 seconds. Logout in {inactivityCountdown} seconds?</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowInactivityDialog(false)}
+                className="mr-2 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+              >
+                No
+              </button>
+              <button
+                onClick={handleInactivityLogout}
+                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCourses.map((course, index) => (
           <div

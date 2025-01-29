@@ -80,6 +80,7 @@ const UploadCourse = () => {
 
                             <label className="block font-medium">Price:</label>
                             <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required className="w-full p-2 border rounded" />
+                            
 
                             <label className="block font-medium">Number of Modules:</label>
                             <select value={numberOfModules} onChange={handleModuleChange} required className="w-full p-2 border rounded">
