@@ -17,7 +17,6 @@ import StudentDash from './components/StudentDash';
 import Hostdashboard from './components/Hostdashboard'
 import UploadCourse from './components/UploadCourse';
 import Mycourses from './components/Mycourses';
-// import Allcourse from './components/Allcourse';
 import CourseDisplay from './components/CourseDisplay';
 
 
@@ -30,7 +29,7 @@ const App = () => {
 const [sidebar, setsidebar] = useState(false);
 
 useEffect(() => {
-  if (([ '/allCourse', 'myCourses', '/uploadCourse'].filter(filterPath)).length !== 0) {
+  if (([ 'myCourses', '/uploadCourse'].filter(filterPath)).length !== 0) {
     setsidebar(true);
   } else {
     setsidebar(false);

@@ -1,4 +1,4 @@
-// UploadedCourses.js
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -15,8 +15,6 @@ const UploadedCourses = () => {
             setError("User ID not found. Please log in again.");
             return;
         }
-
-        // Fetch the uploaded courses
         axios
             .get(`http://localhost:8000/api/instructor/fetch/${userId}`)
             .then((response) => {
