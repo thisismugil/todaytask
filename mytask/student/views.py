@@ -75,12 +75,32 @@ def send_email(to_email, subject, message):
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
-def send_enrollment_email(user_email):
+def send_enrollment_email(user_email, course_name):
     try:
         # Add your email sending logic here
         logger.info(f"Sending enrollment email to {user_email}")
-    
-        email_sent = send_email(user_email, "Enrollment Confirmation", "You have been enrolled in the course.")
+
+        subject = "Enrollment Confirmation"
+        body = f"""
+        Dear {user_email},
+
+        Thank you for purchasing the course "{course_name}".
+
+        We are excited to have you on board and wish you all the best in your journey through this course.
+
+        If you have any questions or need assistance, please feel free to contact us.
+
+        Best regards,
+        SNS Course Platform
+        """
+
+        # Assuming you have an email sending function like this
+        send_email(user_email, subject, body)
+
+    except Exception as e:
+        logger.error(f"Failed to send enrollment email to {user_email}: {e}")
+
+        email_sent = send_email(user_email, subject, body)
         if not email_sent:
             logger.error(f"Failed to send enrollment email to {user_email}")
             return False
@@ -417,10 +437,11 @@ def enroll_course(request):
             return JsonResponse({"error": "Course not found."}, status=404)
 
         # Check if the user is already enrolled
-        if 'enrolled_users' in course and user_email in course['enrolled_students']:
+        if 'enrolled_students' in course and user_email in course['enrolled_students']:
             return JsonResponse({"message": "User already enrolled in the course."}, status=200)
         print(user_email)
         print(course_id)
+
         # Enroll the user in the course
         course_collection.update_one(
             {"_id": course_id},
@@ -428,7 +449,7 @@ def enroll_course(request):
         )
 
         # Send thank you email
-        send_enrollment_email(user_email)
+        send_enrollment_email(user_email, course['course_name'])
 
         return JsonResponse({"message": "Successfully enrolled in the course."}, status=200)
 
