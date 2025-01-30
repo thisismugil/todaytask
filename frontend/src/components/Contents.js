@@ -20,16 +20,23 @@ export default function Contents() {
 
     const handleSave = async () => {
         try {
-            const response = await axios.put(`http://localhost:8000/api/instructor/edit-course/`, editCourse);
-            setCourse(editCourse);
+            // Ensure we send the `_id` field to the backend for update
+            const payload = { ...editCourse, _id: course._id };
+    
+            const response = await axios.put(
+                "http://localhost:8000/api/instructor/edit-course/", 
+                payload
+            );
+    
+            setCourse(editCourse); // Update state instead of reloading page
             alert(response.data.message);
-            window.location.reload();
+            setIsEditing(false);
         } catch (error) {
-            alert("Error updating course try again");
+            alert("Error updating course. Please try again.");
             console.error("Error updating course:", error);
         }
-        setIsEditing(false);
     };
+    
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">

@@ -269,11 +269,15 @@ def upload_content(request):
         content = data.get('content')
         price = data.get('price')
         user_id = data.get("user_id")
+
         if not user_id:
             return JsonResponse({"error": "User ID is required."}, status=400)
         if not course_name or not description or not content or not price:
             return JsonResponse({"error": "All fields are required."}, status=400)
-        
+
+        # Convert user_id to ObjectId
+        user_object_id = ObjectId(user_id)
+
         course_collection.insert_one({
             "course_name": course_name,
             "category": category,
@@ -283,21 +287,33 @@ def upload_content(request):
             "price": price,
             "user_id": user_id,
             "enrolled_students": []
-            
         })
-        
-        instructor = instructor_collection.find_one({"_id": user_id})
+
+        # Find instructor by user_id
+        instructor = instructor_collection.find_one({"_id": user_object_id})
         if instructor:
-            instructor_email = instructor['email']
-            print("email",instructor_email)
-            subject = 'Course Creation Successful'
-            message = f'Dear Instructor,\n\nYour course "{course_name}" has been successfully created.\n\nBest regards,\nThanks for choosing us.'
-            from_email = 'mugil1206@gmail.com'
-            recipient_list = [instructor_email]
-            send_mail(subject, message, from_email, recipient_list)
+            instructor_email = instructor.get('email')
+            if instructor_email:
+                try:
+                    subject = 'Course Creation Successful'
+                    message = f'Dear Instructor,\n\nYour course "{course_name}" has been successfully created.\n\nBest regards,\nThanks for choosing us.'
+                    from_email = settings.EMAIL_HOST_USER  
+                    recipient_list = [instructor_email]
+
+                    send_mail(subject, message, from_email, recipient_list)
+                    print(f"Email sent to {instructor_email}")  # Debugging log
+                except Exception as e:
+                    print(f"Email sending failed: {e}")  # Print error for debugging
+            else:
+                print("Instructor email not found")
+
         return JsonResponse({"message": "Course uploaded successfully."}, status=200)
+
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON format."}, status=400)
+    except Exception as e:
+        print(f"Error: {e}")  # Debugging
+        return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
     
 @api_view(['GET'])
 def uploaded_courses(request, user_id):
@@ -331,15 +347,20 @@ def edit_course(request):
     try:
         data = json.loads(request.body.decode('utf-8'))
         course_id = data.get('_id')
-        edited_course = course_collection.find_one_and_replace({"_id":course_id}, data)
-        
-        print(edited_course)    
-        if not edited_course:
-            return JsonResponse({"error": "Some error occured while editing."}, status=404)
-        
+        if not course_id:
+            return JsonResponse({"error": "Missing course ID"}, status=400)
+        course_object_id = ObjectId(course_id)
+
+        # Remove _id from data to avoid issues during update
+        data.pop('_id', None)
+
+        updated_course = course_collection.find_one_and_update(
+            {"_id": course_object_id},
+            {"$set": data},
+            return_document=True  # Returns the updated document
+        )
+        if not updated_course:
+            return JsonResponse({"error": "Course not found or update failed."}, status=404)
         return JsonResponse({"message": "Course edited successfully."}, status=200)
-        
     except Exception as e:
         return JsonResponse({"error": "Internal server error. Please try again later."}, status=500)
-        
-    
